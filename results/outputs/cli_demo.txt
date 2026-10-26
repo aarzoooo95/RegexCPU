@@ -1,0 +1,72 @@
+==============================================================================
+Pattern            : (a|b)*abb
+Postfix            : a b | * a . b . b .
+Alphabet           : ['a', 'b']
+epsilon-NFA        : 14 states, 16 edges
+DFA (subset)       : 5 states
+Complete DFA       : 5 states
+Minimal DFA        : 4 states
+Tarjan SCCs        : 1 (largest 4, cyclic 1)
+Dead states pruned : none
+Language           : infinite
+CPU program        : 17 code words + 12 data words
+
+input             NFA    DFA    minDFA  CPU     instr  cycles  CPI    agree
+'abb'             ACC    ACC    ACC     ACC     41     215     5.244  OK
+'aabb'            ACC    ACC    ACC     ACC     52     273     5.25   OK
+'babb'            ACC    ACC    ACC     ACC     52     273     5.25   OK
+'ab'              rej    rej    rej     rej     30     157     5.233  OK
+''                rej    rej    rej     rej     8      41      5.125  OK
+==============================================================================
+Pattern            : [0-9]+(\.[0-9]+)?
+Postfix            : 0 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | + . 0 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | + . ? .
+Alphabet           : ['.', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+epsilon-NFA        : 84 states, 104 edges
+DFA (subset)       : 22 states
+Complete DFA       : 23 states
+Minimal DFA        : 5 states
+Tarjan SCCs        : 5 (largest 1, cyclic 3)
+Dead states pruned : [1]
+Language           : infinite
+CPU program        : 17 code words + 48 data words
+
+input             NFA    DFA    minDFA  CPU     instr  cycles  CPI    agree
+'42'              ACC    ACC    ACC     ACC     30     157     5.233  OK
+'3.14'            ACC    ACC    ACC     ACC     52     273     5.25   OK
+'3.'              rej    rej    rej     rej     30     157     5.233  OK
+'.5'              rej    rej    rej     rej     12     63      5.25   OK
+==============================================================================
+Pattern            : [a-z]+@[a-z]+\.(com|in|org)
+Postfix            : a b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z | + @ . a b | c | d | e | f | g | h | i | j | k | l | m | n | o | p | q | r | s | t | u | v | w | x | y | z | + . . . c o . m . i n . | o r . g . | .
+Alphabet           : ['.', '@', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+epsilon-NFA        : 232 states, 285 edges
+DFA (subset)       : 63 states
+Complete DFA       : 64 states
+Minimal DFA        : 12 states
+Tarjan SCCs        : 12 (largest 1, cyclic 3)
+Dead states pruned : [1]
+Language           : infinite
+CPU program        : 17 code words + 319 data words
+
+input             NFA    DFA    minDFA  CPU     instr  cycles  CPI    agree
+'me@site.com'     ACC    ACC    ACC     ACC     129    679     5.264  OK
+'a@b.in'          ACC    ACC    ACC     ACC     74     389     5.257  OK
+'me@site.net'     rej    rej    rej     rej     100    527     5.27   OK
+==============================================================================
+Pattern            : ab|cd?
+Postfix            : a b . c d ? . |
+Alphabet           : ['a', 'b', 'c', 'd']
+epsilon-NFA        : 12 states, 13 edges
+DFA (subset)       : 5 states
+Complete DFA       : 6 states
+Minimal DFA        : 5 states
+Tarjan SCCs        : 5 (largest 1, cyclic 1)
+Dead states pruned : [2]
+Language           : finite -> ['c', 'ab', 'cd']
+CPU program        : 17 code words + 20 data words
+
+input             NFA    DFA    minDFA  CPU     instr  cycles  CPI    agree
+'ab'              ACC    ACC    ACC     ACC     30     157     5.233  OK
+'c'               ACC    ACC    ACC     ACC     19     99      5.211  OK
+'cd'              ACC    ACC    ACC     ACC     30     157     5.233  OK
+'abc'             rej    rej    rej     rej     34     179     5.265  OK

@@ -1,0 +1,52 @@
+; ---- DFA matcher for (a|b)*abb
+; alphabet = ['a', 'b']   states = 4   K = 2
+        LDI   R0, 0        ; R0 = start state
+loop:   IN    R1               ; R1 = next symbol class (-1 end, -2 unknown)
+        CMPI  R1, -1
+        JEQ   done             ; end of input
+        JLT   reject           ; symbol not in alphabet
+        MOV   R2, R0
+        MULI  R2, 2               ; R2 = state * K
+        ADD   R2, R1           ; R2 = state * K + symbol
+        LDX   R0, R2, table    ; indexed addressing: R0 = M[R2 + table]
+        CMPI  R0, -1
+        JEQ   reject           ; dead transition
+        JMP   loop
+done:   LDX   R3, R0, accept   ; R3 = accept[state]
+        CMPI  R3, 1
+        JEQ   yes
+reject: REJECT
+yes:    ACCEPT
+table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+accept: .word 0, 0, 0, 1
+
+Memory map (addr: word  source):
+  0000: 01000000  LDI   R0, 0        ; R0 = start state
+  0001: 10100000  loop:   IN    R1               ; R1 = next symbol class (-1 end, -2 unknown)
+  0002: 0b10ffff  CMPI  R1, -1
+  0003: 0d00000c  JEQ   done             ; end of input
+  0004: 0f00000f  JLT   reject           ; symbol not in alphabet
+  0005: 05200000  MOV   R2, R0
+  0006: 09200002  MULI  R2, 2               ; R2 = state * K
+  0007: 06210000  ADD   R2, R1           ; R2 = state * K + symbol
+  0008: 03020011  LDX   R0, R2, table    ; indexed addressing: R0 = M[R2 + table]
+  0009: 0b00ffff  CMPI  R0, -1
+  0010: 0d00000f  JEQ   reject           ; dead transition
+  0011: 0c000001  JMP   loop
+  0012: 03300019  done:   LDX   R3, R0, accept   ; R3 = accept[state]
+  0013: 0b300001  CMPI  R3, 1
+  0014: 0d000010  JEQ   yes
+  0015: 12000000  reject: REJECT
+  0016: 11000000  yes:    ACCEPT
+  0017: 00000001  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0018: 00000000  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0019: 00000001  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0020: 00000002  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0021: 00000001  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0022: 00000003  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0023: 00000001  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0024: 00000000  table:  .word 1, 0, 1, 2, 1, 3, 1, 0
+  0025: 00000000  accept: .word 0, 0, 0, 1
+  0026: 00000000  accept: .word 0, 0, 0, 1
+  0027: 00000000  accept: .word 0, 0, 0, 1
+  0028: 00000001  accept: .word 0, 0, 0, 1

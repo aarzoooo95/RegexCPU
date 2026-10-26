@@ -1,0 +1,29 @@
+[000] LDI   R0, 0            cost=5  cycles=5
+      T0  MAR <- PC            (MAR = 0)
+      T1  MDR <- M[MAR]; PC++  (MDR = 0x01000000, PC = 1)
+      T2  IR  <- MDR
+      T3  DECODE  opcode=LDI rd=R0 rs=R0 imm=0  [immediate addressing]
+      T4  EXECUTE R0 <- 0
+      R = [0, 0, 0, 0, 0, 0, 0, 0]  Z=0 N=0
+[001] IN    R1               cost=5  cycles=10
+      T0  MAR <- PC            (MAR = 1)
+      T1  MDR <- M[MAR]; PC++  (MDR = 0x10100000, PC = 2)
+      T2  IR  <- MDR
+      T3  DECODE  opcode=IN rd=R1 rs=R0 imm=0
+      T4  EXECUTE R1 <- input symbol 0
+      R = [0, 0, 0, 0, 0, 0, 0, 0]  Z=0 N=0
+[002] CMPI  R1, -1           cost=5  cycles=15
+      T0  MAR <- PC            (MAR = 2)
+      T1  MDR <- M[MAR]; PC++  (MDR = 0x0b10ffff, PC = 3)
+      T2  IR  <- MDR
+      T3  DECODE  opcode=CMPI rd=R1 rs=R0 imm=-1  [immediate addressing]
+      T4  EXECUTE R1(0) - -1 -> Z=0 N=0
+      R = [0, 0, 0, 0, 0, 0, 0, 0]  Z=0 N=0
+[003] JEQ   12               cost=5  cycles=20
+      T0  MAR <- PC            (MAR = 3)
+      T1  MDR <- M[MAR]; PC++  (MDR = 0x0d00000c, PC = 4)
+      T2  IR  <- MDR
+      T3  DECODE  opcode=JEQ rd=R0 rs=R0 imm=12
+      T4  EXECUTE not taken: PC = 4
+      R = [0, 0, 0, 0, 0, 0, 0, 0]  Z=0 N=0
+[004] JLT   15               cost=5  cycles=25

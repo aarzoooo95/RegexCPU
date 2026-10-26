@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RegexCPU – Regex compiler on a simulated CPU</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--ink:#1c2230;--mute:#5d6678;--line:#dfe3ea;--acc:#2f5bd8;--ok:#177a45;--bad:#c23a3a;--code:#f0f2f6}
+@media (prefers-color-scheme:dark){:root{--bg:#10131a;--card:#181c26;--ink:#e6e9f0;--mute:#9aa3b5;--line:#2a3040;--acc:#7f9cff;--ok:#4cc28a;--bad:#ff7b7b;--code:#10131a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+header{padding:22px 20px 8px;max-width:1100px;margin:auto}h1{margin:0;font-size:1.6rem}header p{margin:.3rem 0 0;color:var(--mute)}
+.tags span{display:inline-block;margin:8px 6px 0 0;padding:2px 10px;border:1px solid var(--line);border-radius:99px;font-size:.78rem;color:var(--mute)}
+main{max-width:1100px;margin:auto;padding:12px 20px 60px;display:grid;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+h2{font-size:1.05rem;margin:0 0 10px}label{display:block;font-weight:600;margin:8px 0 4px}
+input,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:14px ui-monospace,Consolas,monospace}
+button{padding:9px 16px;border:0;border-radius:8px;background:var(--acc);color:#fff;font-weight:600;cursor:pointer}button.alt{background:transparent;color:var(--acc);border:1px solid var(--line)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px}.stat b{display:block;font-size:1.35rem}.stat small{color:var(--mute)}
+table{width:100%;border-collapse:collapse;font-size:.88rem}th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+.wrap{overflow-x:auto}.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+pre{margin:0;padding:12px;background:var(--code);border-radius:8px;overflow:auto;font:12.5px/1.45 ui-monospace,Consolas,monospace}
+.tabs{display:flex;gap:6px;margin-bottom:8px}.tabs button{background:transparent;color:var(--ink);border:1px solid var(--line)}.tabs button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.svgbox{overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;color:var(--ink)}
+details{border:1px solid var(--line);border-radius:8px;margin:6px 0;padding:6px 10px}summary{cursor:pointer;font-family:ui-monospace,monospace;font-size:.85rem}
+.err{color:var(--bad);font-weight:600}.mute{color:var(--mute)}.hide{display:none}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:800px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>RegexCPU</h1>
+  <p>Type a regular expression. It is compiled to an ε-NFA → DFA → minimal DFA, analysed with Tarjan’s SCC algorithm, turned into machine code and executed on a simulated CPU – cycle by cycle.</p>
+  <div class="tags"><span>FLAT · Regex → Finite Automata</span><span>DAA · Tarjan SCC</span><span>COA · Instruction Cycle</span></div>
+</header>
+<main>
+  <section class="card">
+    <h2>1 · Input</h2>
+    <label for="pat">Regular expression</label>
+    <input id="pat" value="(a|b)*abb" spellcheck="false" autocomplete="off">
+    <label for="words">Test strings (one per line)</label>
+    <textarea id="words" rows="5" spellcheck="false">abb
+aabb
+babb
+ab
+</textarea>
+    <div class="row">
+      <button id="run">Compile &amp; run</button>
+      <button class="alt" data-p="(a|b)*abb" data-w="abb&#10;aabb&#10;ab&#10;">ends in abb</button>
+      <button class="alt" data-p="[0-9]+(\.[0-9]+)?" data-w="42&#10;3.14&#10;3.&#10;.5">decimal number</button>
+      <button class="alt" data-p="[a-z]+@[a-z]+\.(com|in|org)" data-w="me@site.com&#10;a@b.in&#10;me@site.net">simple e-mail</button>
+      <button class="alt" data-p="ab|cd?" data-w="ab&#10;c&#10;cd&#10;abc">finite language</button>
+    </div>
+    <p class="mute" style="margin:10px 0 0">Syntax: literals, <code>|</code> <code>*</code> <code>+</code> <code>?</code> <code>( )</code> <code>[a-z0-9]</code> and <code>\x</code> escapes. Characters outside the pattern’s alphabet are rejected by the CPU.</p>
+    <p id="err" class="err"></p>
+  </section>
+
+  <div id="out" class="hide" style="display:grid;gap:16px">
+    <section class="card"><h2>2 · Compilation pipeline</h2><div class="grid" id="stats"></div><p id="lang" class="mute"></p></section>
+    <section class="card"><h2>3 · Results – NFA vs DFA vs minimal DFA vs CPU</h2><div class="wrap"><table id="res"></table></div></section>
+    <section class="card"><h2>4 · Automata diagrams</h2>
+      <div class="tabs"><button data-t="min_dfa" class="on">Minimal DFA (red = dead state)</button><button data-t="nfa">ε-NFA</button></div>
+      <div id="svg" class="svgbox"></div></section>
+    <section class="card"><h2>5 · Tarjan SCC analysis (DAA)</h2><div class="wrap"><table id="scc"></table></div>
+      <p class="mute" style="margin:8px 0 0">SCCs are listed in the order Tarjan emits them – reverse topological order of the condensation DAG.</p></section>
+    <div class="two">
+      <section class="card"><h2>6 · Generated assembly (COA)</h2><pre id="asm"></pre></section>
+      <section class="card"><h2>Memory map</h2><div class="wrap" style="max-height:420px;overflow:auto"><table id="mem"></table></div></section>
+    </div>
+    <section class="card"><h2>7 · Instruction-cycle trace of the first test string</h2><div id="trace"></div></section>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);let last=null;
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function show(tab){if(!last)return;const s=last.svg[tab];$('svg').innerHTML=s||'<p class="mute">Diagram too large to draw.</p>';
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));}
+async function run(){
+  $('err').textContent='';
+  const r=await fetch('/api/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pattern:$('pat').value,words:$('words').value.split('\n').filter(w=>w.length)})});
+  const d=await r.json();
+  if(!r.ok){$('err').textContent=d.error;return;}
+  last=d;$('out').classList.remove('hide');const s=d.stats;
+  const box=(n,l)=>`<div class="stat"><b>${n}</b><small>${l}</small></div>`;
+  $('stats').innerHTML=box(s.nfa_states,'ε-NFA states')+box(s.dfa_states,'DFA states (subset)')+box(s.min_dfa_states,'minimal DFA states')+
+    box(s.scc_count,'SCCs (Tarjan)')+box(s.dead_states.length,'dead states pruned')+box(s.code_words+' + '+s.data_words,'code + data words');
+  $('lang').innerHTML=`Postfix: <code>${esc(s.postfix)}</code> · Alphabet: <code>${esc(s.alphabet.join(' '))}</code> · Language is <b>${s.is_infinite?'infinite':'finite'}</b>`+(d.language?` → ${d.language.map(w=>'<code>'+(esc(w)||'ε')+'</code>').join(', ')}`:'');
+  const yn=b=>b?'<span class="ok">accept</span>':'<span class="bad">reject</span>';
+  $('res').innerHTML='<tr><th>input</th><th>NFA</th><th>DFA</th><th>min DFA</th><th>CPU</th><th>instr</th><th>cycles</th><th>CPI</th><th>agree</th></tr>'+
+    d.results.map(x=>`<tr><td><code>${esc(x.input)||'ε'}</code></td><td>${yn(x.nfa)}</td><td>${yn(x.dfa)}</td><td>${yn(x.min_dfa)}</td><td>${yn(x.cpu)}</td><td>${x.instructions}</td><td>${x.cycles}</td><td>${x.cpi}</td><td>${x.agree?'✔':'✘'}</td></tr>`).join('');
+  $('scc').innerHTML='<tr><th>SCC</th><th>states</th><th>flags</th></tr>'+d.scc.map(c=>`<tr><td>${c.id}</td><td>${c.states.map(q=>'q'+q).join(', ')}</td><td>${c.tags.join(' ')||'–'}</td></tr>`).join('');
+  $('asm').textContent=d.asm;
+  $('mem').innerHTML='<tr><th>addr</th><th>word (hex)</th><th>meaning</th></tr>'+d.listing.map(m=>`<tr><td>${m.addr}</td><td>${m.word}</td><td>${esc(m.text)}</td></tr>`).join('');
+  $('trace').innerHTML=d.trace.length?d.trace.map(t=>`<details><summary>[${String(t.pc).padStart(3,'0')}] ${esc(t.asm)} &nbsp; <span class="mute">cost ${t.cost} · total ${t.cycles} cycles</span></summary><pre>${esc(t.micro.join('\n'))}\nR0-R7 = [${t.regs.join(', ')}]  Z=${t.z} N=${t.n}</pre></details>`).join('')+'<p class="mute">Showing the first '+d.trace.length+' instructions.</p>':'<p class="mute">Add a test string to see a trace.</p>';
+  show('min_dfa');
+}
+$('run').onclick=run;
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>show(b.dataset.t));
+document.querySelectorAll('button[data-p]').forEach(b=>b.onclick=()=>{$('pat').value=b.dataset.p;$('words').value=b.dataset.w;run();});
+$('pat').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+run();
+</script>
+</body>
+</html>

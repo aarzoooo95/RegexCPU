@@ -1,0 +1,15 @@
+{
+  "name": "YOUR FULL NAME",
+  "roll_no": "YOUR ROLL NUMBER",
+  "degree": "BACHELOR OF TECHNOLOGY",
+  "department": "COMPUTER SCIENCE AND ENGINEERING",
+  "guide_coa": "COA FACULTY NAME",
+  "guide_flat": "FLAT FACULTY NAME",
+  "guide_daa": "DAA FACULTY NAME",
+  "designation": "Assistant Professor, ASAC",
+  "month_year": "October-2026",
+  "academic_year": "2026",
+  "github_url": "https://github.com/<your-username>/RegexCPU",
+  "deployed_url": "https://<your-app>.onrender.com",
+  "system": {}
+}

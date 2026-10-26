@@ -1,0 +1,23 @@
+Pattern            : (a|b)*abb
+Postfix            : a b | * a . b . b .
+Alphabet           : ['a', 'b']
+epsilon-NFA        : 14 states, 16 edges
+DFA (subset)       : 5 states
+Complete DFA       : 5 states
+Minimal DFA        : 4 states
+Tarjan SCCs        : 1 (largest 4, cyclic 1)
+Dead states pruned : none
+Language           : infinite
+CPU program        : 17 code words + 12 data words
+
+Tarjan output (reverse topological order of the condensation DAG):
+  SCC 0: states [0, 1, 2, 3] cyclic accepting
+Condensation edges: none
+Dead states: none
+
+input             NFA    DFA    minDFA  CPU     instr  cycles  CPI    agree
+'abb'             ACC    ACC    ACC     ACC     41     215     5.244  OK
+'aabb'            ACC    ACC    ACC     ACC     52     273     5.25   OK
+'ab'              rej    rej    rej     rej     30     157     5.233  OK
+''                rej    rej    rej     rej     8      41      5.125  OK
+'abbc'            rej    rej    rej     rej     39     204     5.231  OK
