@@ -61,7 +61,5 @@ and indexed (`LDX R0, R2, table` → `R0 = M[R2 + table]`). One instruction cost
 (3 fetch + 1 decode + 1 execute), +1 for a memory operand, +2 for multiply. The generated matcher
 executes 11 instructions (58 cycles) per input symbol, so run time is `41 + 58·n` cycles.
 
-## Deploy (free) on Render
-1. Push this folder to GitHub.  2. Render → *New + → Web Service* → pick the repo.
-3. Render reads `render.yaml` (build `pip install -r requirements.txt`, start `gunicorn app:app`).
-4. Paste the resulting URL at the top of this README.
+DEPLOYED LINK--> https://regexcpu.onrender.com/
+GITHUB LINK--> https://github.com/aarzoooo95/RegexCPU.git
